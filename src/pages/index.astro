@@ -1,0 +1,398 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import {
+  projects, projectFilters, coursesCurrent, coursesArchived,
+  languages, frameworks, databases, craft, accentCycle,
+} from '../data/site';
+
+const pad = (n: number) => String(n).padStart(2, '0');
+const count = (cat: string) => (cat === 'all' ? projects.length : projects.filter((p) => p.cat === cat).length);
+
+const toBars = (rows: [string, number, string][]) => {
+  const max = Math.max(...rows.map((r) => r[1]), 20);
+  return rows.map(([name, years, focus], i) => ({
+    name, years, focus, k: i,
+    color: accentCycle[i % accentCycle.length],
+    h: Math.round(30 + (years / max) * 270),
+    d: (i * -0.23).toFixed(2),
+  }));
+};
+const fly = [[-320, -140, -40], [280, -180, 32], [-240, 200, 24], [340, 160, -36], [0, -280, 60], [-360, 40, -22]];
+const toTags = (groups: { label: string; items: string[] }[]) => {
+  let k = 0;
+  return groups.map((g) => ({
+    label: g.label,
+    items: g.items.map((name) => {
+      const j = k++;
+      const f = fly[j % fly.length];
+      return { name, k: j, color: accentCycle[j % accentCycle.length], tx: `${f[0]}px`, ty: `${f[1]}px`, tr: `${f[2]}deg` };
+    }),
+  }));
+};
+const stackTabs = [
+  { id: 'languages', label: 'Languages', word: 'Languages', wipe: 'var(--lime)', bars: toBars(languages) },
+  { id: 'frameworks', label: 'Frameworks', word: 'Frameworks', wipe: 'var(--ice)', bars: toBars(frameworks) },
+  { id: 'data', label: 'Databases', word: 'Databases', wipe: 'var(--blue)', tags: toTags(databases) },
+  { id: 'craft', label: 'Graphics & tools', word: 'Graphics & tools', wipe: 'var(--lime)', tags: toTags(craft) },
+];
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 2);
+const fmtDate = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+const covers = [
+  { art: 'art-b', bg: 'var(--lime)', size: '34px 34px', tag: 'var(--lime)' },
+  { art: 'art-d', bg: 'var(--ice)', size: '26px 26px', tag: 'var(--ice)' },
+];
+
+const star = 'M50 0L61 39L100 50L61 61L50 100L39 61L0 50L39 39Z';
+const plus = 'M38 0h24v38h38v24H62v38H38V62H0V38h38z';
+const arrowRight = 'M5 12h14M13 6l6 6-6 6';
+---
+<Base title="Ryan Appel — Fullstack developer, instructor & game developer">
+
+  <!-- HERO -->
+  <section id="top" class="recede hero" style="position:relative;z-index:1;overflow:hidden;padding:72px 0 80px;background:#050505">
+    <div class="dots" aria-hidden="true"></div>
+    <div class="spot" aria-hidden="true"></div>
+    <div class="shape blast" aria-hidden="true" style="right:9%;top:70px;width:130px;--bx:30vw;--by:-260px;--br:260deg"><div class="bob"><svg viewBox="0 0 100 100"><path d={star} style="fill:var(--ice)"></path></svg></div></div>
+    <div class="shape blast" aria-hidden="true" style="right:26%;top:300px;width:92px;--bx:18vw;--by:340px;--br:-200deg"><div class="bob" style="--bd:-1.2s"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="34" style="fill:none;stroke:var(--ice);stroke-width:18"></circle></svg></div></div>
+    <div class="shape blast" aria-hidden="true" style="right:5%;top:430px;width:150px;--bx:40vw;--by:120px;--br:120deg"><div class="bob" style="--bd:-2s"><svg viewBox="0 0 100 100"><path d="M50 8L94 88H6Z" style="fill:none;stroke:var(--blue);stroke-width:12;stroke-linejoin:round"></path></svg></div></div>
+    <div class="shape blast" aria-hidden="true" style="left:46%;top:40px;width:70px;--bx:-10vw;--by:-320px;--br:300deg"><div class="bob" style="--bd:-.6s"><svg viewBox="0 0 100 100"><path d={plus} style="fill:var(--ice)"></path></svg></div></div>
+    <div class="shape blast" aria-hidden="true" style="right:16%;top:610px;width:120px;--bx:10vw;--by:420px;--br:-320deg"><div class="bob" style="--bd:-2.6s"><svg viewBox="0 0 100 60"><path d="M6 40q11-30 22 0t22 0t22 0t22 0" style="fill:none;stroke:var(--lime);stroke-width:10;stroke-linecap:round"></path></svg></div></div>
+    <div class="wrap" style="position:relative;z-index:4;display:flex;flex-direction:column;gap:36px;min-height:700px">
+      <div class="mono" style="color:var(--muted)">Portfolio — {new Date().getFullYear()}</div>
+      <h1 class="x" style="margin:12px 0 0;font-size:clamp(88px,15.5vw,250px)">
+        <span class="sr">I build games, web apps, tools and developers.</span>
+        <span aria-hidden="true">
+          <span class="blast" style="display:block;overflow:hidden;--bx:-50vw;--by:0px;--br:-6deg;--bs:1"><span class="rise" style="display:block;--d:.05s">I build</span></span>
+          <span class="blast" style="display:block;overflow:hidden;color:var(--lime);--bx:50vw;--by:0px;--br:6deg;--bs:1"><span class="rise" style="display:block;--d:.18s"><span class="slot"><span class="slot-track" data-slot><span style="color:var(--lime)">games.</span><span style="color:var(--ice)">web apps.</span><span style="color:var(--ice)">tools.</span><span style="color:var(--lime)">developers.</span><span style="color:var(--lime)">games.</span></span></span></span></span>
+        </span>
+      </h1>
+      <div style="margin-top:auto;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:32px">
+        <p class="pop" style="--d:.5s;margin:0;max-width:520px;font-size:20px;line-height:1.5;font-weight:600">Ryan Appel — fullstack developer, programming instructor and builder of digital worlds. Twenty-five years of shipping software; ten of teaching people to.</p>
+        <div class="pop" style="--d:.65s;display:flex;flex-wrap:wrap;gap:12px">
+          <a class="btn btn-lime" href="#work">See the work <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12l7 7 7-7"></path></svg></a>
+          <a class="btn btn-line" href="#lab">Play in the lab</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARQUEES -->
+  <div aria-hidden="true" style="position:relative;z-index:2;height:300px;overflow:hidden;margin-top:-40px">
+    <div class="skew" style="position:absolute;left:-20%;right:-20%;top:50px;padding:18px 0;background:var(--blue);color:#FFFFFF;transform:rotate(3deg)">
+      <div class="mq rev x" style="font-size:54px;gap:40px;white-space:nowrap">
+        {Array.from({ length: 4 }).flatMap(() => ['Applications', 'Web systems', 'Games', 'Classrooms']).map((w) => <><span>{w}</span><span>✦</span></>)}
+      </div>
+    </div>
+    <div style="position:absolute;left:-10%;right:-10%;top:128px;padding:20px 0;background:var(--lime);color:var(--ink);transform:rotate(-2deg);box-shadow:0 20px 60px rgba(0,0,0,.45)">
+      <div class="mq x" style="font-size:58px;gap:40px;white-space:nowrap;align-items:center">
+        {Array.from({ length: 2 }).flatMap(() => ['Fullstack developer', 'Programming instructor', 'Game developer', 'Creative technologist']).map((w) => <><span>{w}</span><span>✳</span></>)}
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <section aria-label="By the numbers" class="recede" style="position:relative;z-index:3;padding:60px 0 120px;background:#050505">
+    <div class="wrap">
+      <div class="g4" data-stats>
+        {[
+          { n: 25, plus: true, label: 'Years building software', bg: 'var(--lime)', r: '-2deg' },
+          { n: 10, plus: true, label: 'Years teaching code', bg: 'var(--ice)', r: '2deg' },
+          { n: 13, plus: false, label: 'Courses taught', bg: 'var(--ice)', r: '-1.5deg' },
+          { n: 23, plus: false, label: 'Tools in the stack', bg: 'var(--lime)', r: '2.5deg' },
+        ].map((s, i) => (
+          <div class="tile tile-in" style={`background:${s.bg};--r:${s.r}`}>
+            <span class="mono" style="font-weight:700">( {pad(i + 1)} )</span>
+            <div>
+              <span class="sr">{s.n}{s.plus ? ' plus' : ''} {s.label.toLowerCase()}</span>
+              <span class="x" aria-hidden="true" style="font-size:clamp(90px,10vw,170px);display:block"><span class="count" style={`--to:${s.n}`}></span>{s.plus ? '+' : ''}</span>
+              <span aria-hidden="true" style="font-weight:800;font-size:17px">{s.label}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- WORK: the page holds while each project flies in and out -->
+  <section id="work" class="sec recede" style="z-index:4;padding:120px 0 140px;background:var(--panel)">
+    <div class="shape fly-a" aria-hidden="true" style="left:40%;top:160px;width:110px"><svg viewBox="0 0 100 100"><path d={star} style="fill:var(--ice)"></path></svg></div>
+    <div class="wrap">
+      <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:28px;margin-bottom:40px">
+        <h2 class="x" style="margin:0;font-size:clamp(64px,9vw,150px)"><span class="from-l" style="display:block">Selected</span><span class="from-r" style="display:block;color:var(--ice)">work <sup class="mono" style="font-size:18px;color:var(--fg);vertical-align:top">(<span data-work-count>{pad(projects.length)}</span>)</sup></span></h2>
+        <div role="group" aria-label="Filter projects" style="display:flex;flex-wrap:wrap;gap:8px">
+          {projectFilters.map((f) => (
+            <button type="button" class={`chip${f.id === 'all' ? ' on' : ''}`} style={`--c:${f.color}`} data-filter={f.id} aria-pressed={f.id === 'all' ? 'true' : 'false'}>{f.label} · {count(f.id)}</button>
+          ))}
+        </div>
+      </div>
+      <div class="show" style={`--n:${projects.length}`} data-show>
+        <div class="show-sticky">
+          <div class="show-stage">
+            {projects.map((p, i) => (
+              <article class="show-item" data-cat={p.cat} style={`--c:${p.color}`}>
+                <div class="info" style="display:flex;flex-direction:column;gap:20px">
+                  <div style="display:flex;align-items:center;gap:14px">
+                    <span class="x" style="font-size:64px;color:var(--c)">{pad(i + 1)}</span>
+                    <span class="mono" style="color:var(--muted)">/ {pad(projects.length)}</span>
+                    <span class="mono" style="margin-left:8px;padding:6px 12px;border-radius:999px;background:var(--c);color:var(--ink);font-weight:700">{p.catLabel}</span>
+                  </div>
+                  <h3 class="x" style="margin:0;font-size:clamp(56px,6.4vw,108px)">{p.name}</h3>
+                  <p style="margin:0;max-width:440px;color:var(--muted);font-size:18px;line-height:1.5">{p.description}</p>
+                  <div class="mono" style="display:flex;flex-wrap:wrap;gap:8px">
+                    <span class="meta-pill">{p.tech}</span><span class="meta-pill">{p.status}</span><span class="meta-pill">{p.year}</span>
+                  </div>
+                  <a class="btn btn-line" href={p.href} style="align-self:flex-start" {...(p.href.startsWith('http') ? { target: '_blank', rel: 'noopener' } : {})}>{p.cta ?? 'View project'} →</a>
+                </div>
+                <div class="screen">
+                  <div class="chrome"><span class="dot" style="background:var(--c)"></span><span class="dot"></span><span class="dot"></span><span class="mono" style="margin-left:12px">{p.addressBar}</span></div>
+                  {p.image ? (
+                    <div class={`scr-body ${p.image.fit}`}><img src={p.image.src} alt={p.image.alt} loading="lazy" decoding="async" /></div>
+                  ) : (
+                    <div class={`scr-body ${p.art}`}><span class="mono scr-label">[ Screenshot — {p.name} ]</span></div>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+          <div class="show-meter" aria-hidden="true"><div class="show-fill"></div></div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:28px">
+        <a class="btn btn-line" href="https://github.com/rdappel" target="_blank" rel="noopener">Everything on GitHub ↗</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT I DO: pinned horizontal panels -->
+  <section id="what" class="hpin" aria-label="What I do" style="position:relative;z-index:5;margin-top:-48px">
+    <div class="hpin-sticky">
+      <div class="hpin-track">
+        <div class="panel on-color" style="background:var(--lime);color:var(--ink)">
+          <span class="x ghost" aria-hidden="true">Build build build</span>
+          <div class="shape turn big" aria-hidden="true" style="right:6%;top:12%;width:300px"><svg viewBox="0 0 100 100"><path d={star} style="fill:var(--ink)"></path></svg></div>
+          <div class="wrap panel-grid"><div style="display:flex;flex-direction:column;gap:28px">
+            <span class="mono" style="font-weight:700">( 01 / 03 — What I do )</span>
+            <h2 class="x" style="margin:0;font-size:clamp(80px,11vw,190px)">Build.</h2>
+            <p style="margin:0;max-width:560px;font-size:21px;line-height:1.45;font-weight:600">Fullstack systems and web apps — Node and Express back ends, React and Astro front ends — built for clarity, speed and long-term maintainability.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:10px">{['JavaScript', 'Node', 'React', 'Astro', 'C#', 'PHP', 'SQL'].map((t) => <span class="tagp">{t}</span>)}</div>
+          </div></div>
+        </div>
+        <div class="panel on-blue" style="background:var(--blue);color:#FFFFFF">
+          <span class="x ghost" aria-hidden="true">Teach teach teach</span>
+          <div class="shape turn big" aria-hidden="true" style="right:8%;top:18%;width:280px"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="34" style="fill:none;stroke:var(--lime);stroke-width:18"></circle></svg></div>
+          <div class="wrap panel-grid"><div style="display:flex;flex-direction:column;gap:28px">
+            <span class="mono" style="font-weight:700">( 02 / 03 — What I do )</span>
+            <h2 class="x" style="margin:0;font-size:clamp(80px,11vw,190px)">Teach.</h2>
+            <p style="margin:0;max-width:560px;font-size:21px;line-height:1.45;font-weight:600">Ten-plus years teaching software and web development across thirteen courses — now focused on AI-assisted software development.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:10px">{['Modern JavaScript', 'C#', 'C++', 'Version control', 'Data access', 'Systems analysis'].map((t) => <span class="tagp">{t}</span>)}</div>
+          </div></div>
+        </div>
+        <div class="panel on-color" style="background:var(--ice);color:var(--ink)">
+          <span class="x ghost" aria-hidden="true">Play play play</span>
+          <div class="shape turn big" aria-hidden="true" style="right:7%;top:16%;width:300px"><svg viewBox="0 0 100 100"><path d={plus} style="fill:var(--ink)"></path></svg></div>
+          <div class="wrap panel-grid"><div style="display:flex;flex-direction:column;gap:28px">
+            <span class="mono" style="font-weight:700">( 03 / 03 — What I do )</span>
+            <h2 class="x" style="margin:0;font-size:clamp(80px,11vw,190px)">Play.</h2>
+            <p style="margin:0;max-width:560px;font-size:21px;line-height:1.45;font-weight:600">Shmups, engines and graphics experiments — from the Katana Engine to the Nintendo 3DS, in C++ with Allegro, OpenGL and shaders.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:10px">{['C++', 'Allegro', 'OpenGL', 'GLSL', 'HLSL', 'Nintendo 3DS'].map((t) => <span class="tagp">{t}</span>)}</div>
+          </div></div>
+        </div>
+      </div>
+      <div aria-hidden="true" class="hide-md" style="position:absolute;left:40px;right:40px;bottom:28px;height:4px;border-radius:4px;background:rgba(5,5,5,.18);overflow:hidden;z-index:6"><div class="hp-meter" style="height:100%;background:var(--ink);transform-origin:left"></div></div>
+    </div>
+  </section>
+
+  <!-- LAB -->
+  <section id="lab" class="sec recede on-color" style="z-index:6;background:var(--lime);color:var(--ink);padding:120px 0 140px">
+    <div class="shape fly-c big" aria-hidden="true" style="left:33%;top:40px;width:80px"><svg viewBox="0 0 100 100"><path d={plus} style="fill:var(--blue)"></path></svg></div>
+    <div class="wrap lab" data-lab>
+      <div class="from-l" style="display:flex;flex-direction:column;gap:26px">
+        <span class="mono" style="font-weight:700">( The Lab — live demo )</span>
+        <h2 class="x" style="margin:0;font-size:clamp(52px,5.2vw,92px);overflow-wrap:anywhere">Collision<br />playground</h2>
+        <p style="margin:0;font-size:18px;line-height:1.5;font-weight:700;max-width:440px">The broad phase from my shmup series, running live. Crank up the bullets, flip between brute force and a spatial grid, and watch the checks per frame. Move through the field — you’re the ship.</p>
+        <div class="seg" role="group" aria-label="Collision method">
+          <button type="button" data-mode="brute" aria-pressed="false">Brute force</button>
+          <button type="button" data-mode="grid" class="on" aria-pressed="true">Spatial grid</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <label for="lab-n" class="mono" style="font-weight:700;display:flex;justify-content:space-between"><span>Objects</span><span data-out="n">400</span></label>
+          <input id="lab-n" class="range" type="range" min="50" max="1200" step="10" value="400" />
+        </div>
+        <div class="readouts" aria-live="off">
+          <div class="readout"><div class="mono" style="font-weight:700">Checks / frame</div><div class="x" data-out="checks">0</div></div>
+          <div class="readout"><div class="mono" style="font-weight:700">Brute force</div><div class="x" data-out="brute">79,800</div></div>
+          <div class="readout"><div class="mono" style="font-weight:700">Work saved</div><div class="x" data-out="saved">0%</div></div>
+          <div class="readout"><div class="mono" style="font-weight:700">Frames / sec</div><div class="x" data-out="fps">60</div></div>
+        </div>
+        <a href="/archive/spatial-partitioning-part-1/" style="font-weight:800;text-decoration-thickness:2px;text-underline-offset:4px">Read how it works →</a>
+      </div>
+      <div class="zoom lab-canvas">
+        <canvas role="img" aria-label="Animated collision demo: moving objects, highlighted when they collide"></canvas>
+        <span class="mono" data-out="mode" style="position:absolute;left:18px;top:16px;color:#F4F4F0;background:rgba(5,5,5,.7);padding:8px 12px;border-radius:999px">Spatial grid · 40px sectors</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEACHING -->
+  <section id="teaching" class="sec recede on-blue" style="z-index:7;background:var(--blue);color:#FFFFFF;padding:130px 0 140px">
+    <div class="shape fly-d big" aria-hidden="true" style="right:22%;top:100px;width:120px"><svg viewBox="0 0 100 100"><path d="M0 50a50 50 0 0 1 100 0z" style="fill:var(--lime)"></path></svg></div>
+    <div class="shape fly-a big" aria-hidden="true" style="left:10%;top:520px;width:70px"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="34" style="fill:none;stroke:var(--ice);stroke-width:18"></circle></svg></div>
+    <div class="wrap" style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:28px;margin-bottom:44px">
+      <div style="display:flex;flex-direction:column;gap:22px">
+        <span class="mono" style="font-weight:700">( Teaching )</span>
+        <h2 class="x" style="margin:0;font-size:clamp(64px,9vw,150px)"><span class="from-l" style="display:block">Ten years</span><span class="from-r" style="display:block;color:var(--lime)">in the classroom</span></h2>
+        <p style="margin:0;max-width:520px;color:var(--muted);font-size:18px;line-height:1.5;font-weight:600">Software and web development courses — with a current focus on AI-assisted software development.</p>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center">
+        <div role="group" aria-label="Course list" style="display:flex;gap:8px">
+          <button type="button" class="chip on" style="--c:var(--lime)" data-courses="current" aria-pressed="true">Current · {coursesCurrent.length}</button>
+          <button type="button" class="chip" style="--c:var(--lime)" data-courses="archived" aria-pressed="false">Archived · {coursesArchived.length}</button>
+        </div>
+        <button type="button" class="round" aria-label="Previous courses" data-rail="-1"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
+        <button type="button" class="round" aria-label="Next courses" data-rail="1"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d={arrowRight}></path></svg></button>
+      </div>
+    </div>
+    <div class="rail-wrap">
+      {[{ id: 'current', list: coursesCurrent }, { id: 'archived', list: coursesArchived }].map((g) => (
+        <div class="rail" data-rail-list={g.id} hidden={g.id !== 'current'}>
+          {g.list.map((c, i) => (
+            <article class="course" style={`--c:${accentCycle[i % 2]};--i:${Math.min(i, 5)}`}>
+              <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                <span class="x big">{pad(i + 1)}</span>
+                <span class="mono" style="padding:6px 10px;border-radius:999px;border:1.5px solid currentColor">{c.status}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <h3 class="x" style="margin:0;font-size:40px;line-height:.92">{c.name}</h3>
+                <span class="mono" style="opacity:.75">{c.track}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- STACK -->
+  <section id="stack" class="sec recede" style="z-index:8;padding:120px 0 140px;background:#0B0B0C">
+    <div class="shape fly-b big" aria-hidden="true" style="left:44%;top:120px;width:100px"><svg viewBox="0 0 100 100"><path d={star} style="fill:var(--lime)"></path></svg></div>
+    <div class="wrap">
+      <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:28px">
+        <div style="display:flex;flex-direction:column;gap:22px">
+          <span class="mono" style="color:var(--muted)">( Stack )</span>
+          <h2 class="x" style="margin:0;font-size:clamp(64px,9vw,150px)"><span class="from-l" style="display:block">Turn it</span><span class="from-r" style="display:block;color:var(--lime)">up.</span></h2>
+        </div>
+        <div role="tablist" aria-label="Stack category" style="display:flex;flex-wrap:wrap;gap:8px">
+          {stackTabs.map((t, i) => (
+            <button type="button" role="tab" id={`tab-${t.id}`} aria-controls={`panel-${t.id}`} class={`chip${i === 0 ? ' on' : ''}`} style="--c:var(--lime)" aria-selected={i === 0 ? 'true' : 'false'} data-tab={t.id}>{t.label}</button>
+          ))}
+        </div>
+      </div>
+      <div class="stack-stage">
+        {stackTabs.map((t, i) => (
+          <div class="stack-panel" role="tabpanel" id={`panel-${t.id}`} aria-labelledby={`tab-${t.id}`} hidden={i !== 0}>
+            <span class="x tab-word" aria-hidden="true">{t.word}</span>
+            <div class="wipe" aria-hidden="true" style={`background:${t.wipe}`}></div>
+            {t.bars && (
+              <div class="eq" role="list" aria-label={`Years of experience — ${t.label}`}>
+                {t.bars.map((b) => (
+                  <div class="eq-col" role="listitem" style={`--c:${b.color};--k:${b.k}`}>
+                    <span class="eq-val drop">{b.years}<span style="color:var(--c)">y+</span></span>
+                    <div class="eq-grow"><div class="eq-pop"><div class="eq-bar" style={`height:${b.h}px;--d:${b.d}s`}></div></div></div>
+                    <span class="eq-name drop">{b.name}</span>
+                    <span class="mono hide-md drop" style="color:var(--muted);font-size:11px;text-align:center">{b.focus}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {t.tags && (
+              <div class="tag-wrap">
+                {t.tags.map((g) => (
+                  <div style="display:flex;flex-direction:column;gap:18px">
+                    <span class="mono drop" style="color:var(--muted);--k:0">{g.label}</span>
+                    <div style="display:flex;flex-wrap:wrap;gap:12px">
+                      {g.items.map((it) => <span class="tag tag-in" style={`--c:${it.color};--k:${it.k};--tx:${it.tx};--ty:${it.ty};--tr:${it.tr}`}>{it.name}</span>)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- WRITING -->
+  <section id="writing" class="sec recede on-light" style="z-index:9;padding:130px 0 150px;background:var(--paper);color:#0B0B0B">
+    <div class="shape fly-a big" aria-hidden="true" style="left:30%;top:60px;width:110px"><svg viewBox="0 0 100 100"><path d={star} style="fill:var(--blue)"></path></svg></div>
+    <div class="shape fly-d big" aria-hidden="true" style="right:12%;top:420px;width:90px"><svg viewBox="0 0 100 60"><path d="M6 40q11-30 22 0t22 0t22 0t22 0" style="fill:none;stroke:var(--blue);stroke-width:10;stroke-linecap:round"></path></svg></div>
+    <div class="wrap">
+      <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:28px;margin-bottom:48px">
+        <div style="display:flex;flex-direction:column;gap:22px">
+          <span class="mono" style="color:var(--muted)">( Writing )</span>
+          <h2 class="x" style="margin:0;font-size:clamp(64px,9vw,150px)"><span class="from-l" style="display:block">From the</span><span class="from-r" style="display:block;color:var(--blue)">workbench.</span></h2>
+        </div>
+        <a class="btn btn-line" href="/archive/">All writing →</a>
+      </div>
+      <div class="g2">
+        {posts.map((post, i) => {
+          const c = covers[i % covers.length];
+          return (
+            <a class={`post ${i % 2 ? 'from-r' : 'from-l'}`} href={`/archive/${post.id}/`}>
+              <div class={`cover ${c.art}`} style={`--c:var(--ink);background-color:${c.bg};background-size:${c.size}`}></div>
+              <div style="padding:30px;display:flex;flex-direction:column;gap:16px">
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                  <span class="mono" style={`padding:6px 12px;border-radius:999px;background:var(--ink);color:${c.tag}`}>{post.data.tag}</span>
+                  {post.data.part && <span class="mono" style="padding:6px 12px;border-radius:999px;border:1.5px solid var(--line)">Part {post.data.part}</span>}
+                </div>
+                <h3 class="x" style="margin:0;font-size:clamp(38px,3.6vw,56px)">{post.data.title}</h3>
+                <p style="margin:0;color:var(--muted);font-size:17px;line-height:1.5">{post.data.summary}</p>
+                <span class="mono" style="color:var(--muted)">{fmtDate(post.data.date)}{post.data.readTime ? ` · ${post.data.readTime} min` : ''}</span>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact" class="sec on-color" style="z-index:10;background:var(--ice);color:var(--ink);padding:130px 0 150px;overflow:hidden" data-cta>
+    <div class="shape fly-c big" aria-hidden="true" style="left:52%;top:80px;width:90px"><svg viewBox="0 0 100 100"><path d={star} style="fill:var(--lime)"></path></svg></div>
+    <div class="wrap" style="display:flex;flex-direction:column;gap:64px">
+      <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:40px">
+        <h2 class="x" style="margin:0;font-size:clamp(72px,11.5vw,190px)"><span class="from-l" style="display:block">Got an idea?</span><span class="from-r" style="display:block">Let’s make</span><span class="from-l" style="display:block;color:#FFFFFF">it loud.</span></h2>
+        <a class="magnet zoom" href="#cf-name" data-magnet style="width:220px;height:220px;border-radius:50%;background:var(--ink);color:#F4F4F0;display:grid;place-items:center;text-decoration:none;flex:none">
+          <span style="display:flex;flex-direction:column;align-items:center;gap:8px;font-weight:800;font-size:20px">Let’s talk <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9"></path></svg></span>
+        </a>
+      </div>
+      <div class="from-b" style="display:flex;flex-direction:column;gap:40px;padding:48px;border-radius:32px;background:var(--ink);color:#F4F4F0">
+        <!--
+          CONTACT FORM — set PUBLIC_CONTACT_ENDPOINT in a .env file to any service that
+          accepts a POSTed form (Formspree, Getform, Basin, your own endpoint…). See README.
+        -->
+        <form data-contact action={import.meta.env.PUBLIC_CONTACT_ENDPOINT ?? ''} method="post" style="display:flex;flex-direction:column;gap:24px">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px">
+            <div class="field"><label for="cf-name">Name</label><input id="cf-name" name="name" type="text" autocomplete="name" placeholder="Your name" required /></div>
+            <div class="field"><label for="cf-email">Email</label><input id="cf-email" name="email" type="email" autocomplete="email" placeholder="you@domain.com" required /></div>
+          </div>
+          <div class="field"><label for="cf-msg">Message</label><textarea id="cf-msg" name="message" rows="3" placeholder="What are we building?" style="resize:vertical" required></textarea></div>
+          <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px" />
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:20px"><button class="btn btn-ice" type="submit">Send it →</button><p class="form-status" role="status" data-status></p></div>
+        </form>
+        <div data-sent hidden>
+          <span class="x" style="font-size:72px;color:var(--ice)">Sent!</span>
+          <span style="color:#A3A39C;font-size:18px">Thanks — I’ll be in touch soon.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    import './../scripts/home';
+  </script>
+</Base>

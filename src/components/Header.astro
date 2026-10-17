@@ -1,0 +1,24 @@
+---
+interface Props { current?: 'home' | 'writing' }
+const { current = 'home' } = Astro.props;
+// On the home page the section links are plain anchors; elsewhere they jump back home first.
+const base = current === 'home' ? '' : '/';
+---
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a href={current === 'home' ? '#top' : '/'} class="logo x" aria-label="Ryan Appel — home">RA</a>
+    <div class="mono hide-md" style="display:flex;align-items:center;gap:8px;color:var(--muted)">
+      <span class="blink" style="width:8px;height:8px;border-radius:50%;background:var(--lime)"></span>
+      Fullstack · Instructor · Game dev
+    </div>
+    <nav class="nav" aria-label="Primary">
+      <a class="nav-link" href={`${base}#work`} style="--c:var(--ice)">Work</a>
+      <a class="nav-link" href={`${base}#lab`} style="--c:var(--ice)">Lab</a>
+      <a class="nav-link" href={`${base}#teaching`} style="--c:var(--ice)">Teaching</a>
+      <a class="nav-link" href={`${base}#stack`} style="--c:var(--lime)">Stack</a>
+      <a class="nav-link" href="/archive/" style="--c:var(--ice)" aria-current={current === 'writing' ? 'page' : undefined}>Writing</a>
+      <a class="btn btn-lime" href={`${base}#contact`} style="min-height:44px;padding:0 20px;margin-left:8px">Let’s talk</a>
+    </nav>
+  </div>
+  <span class="progress" aria-hidden="true"></span>
+</header>

@@ -1,0 +1,19 @@
+---
+const first = ['R', 'y', 'a', 'n'];
+const last = ['A', 'p', 'p', 'e', 'l'];
+const colors = ['var(--lime)', 'var(--ice)'];
+---
+<footer class="sec" style="z-index:11;padding:80px 0 28px;background:#050505;overflow:hidden">
+  <div class="wrap" style="display:flex;flex-direction:column;gap:28px">
+    <div class="x" role="img" aria-label="Ryan Appel" style="font-size:clamp(72px,16.5vw,270px);white-space:nowrap;line-height:.8;display:flex;justify-content:space-between">
+      <span aria-hidden="true">{first.map((l, i) => <span class="foot-l letter-up" style={`--i:${i};--c:${colors[i % 2]}`}>{l}</span>)}</span>
+      <span aria-hidden="true">
+        {last.map((l, i) => <span class="foot-l letter-up" style={`--i:${i + 4};--c:${colors[(i + 4) % 2]}`}>{l}</span>)}<span class="foot-l letter-up" style="--i:9;--c:var(--lime);color:var(--ice)">.</span>
+      </span>
+    </div>
+    <div class="mono" style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;color:var(--muted);padding-top:20px;border-top:1px solid var(--line)">
+      <span>© {new Date().getFullYear()} Ryan Appel</span>
+      <a href="#top" style="text-decoration:none;color:var(--fg)">Back to top ↑</a>
+    </div>
+  </div>
+</footer>

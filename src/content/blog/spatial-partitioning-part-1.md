@@ -1,21 +1,16 @@
 ---
 title: "Spatial Partitioning in a Shmup — Part 1: The Broad Phase"
-date: 2026-04-13T10:40:31Z
+date: 2026-04-10
 summary: "Why naive collision detection struggles in shmups, and how a grid-based broad phase removes most unnecessary checks."
 tag: "Game dev"
 readTime: 10
 series: "Spatial Partitioning in a Shmup"
 part: 1
-diagram: true
 ---
 
-<!--
-  PLACEHOLDER BODY — this is a condensed outline written for the redesign mock-up.
-  Paste the original markdown of this post from your current Astro site over everything
-  below the front matter. Headings (##) automatically become the numbered table of contents.
--->
+When a shoot-'em-up fills the screen with bullets, enemies, pickups, and effects, collision detection can quietly become the most expensive work in the frame. The good news is that most of those objects are nowhere near each other, so most possible checks are wasted before they begin.
 
-[Article intro — paste the post’s opening paragraph here.]
+This article builds the first half of a practical collision pipeline: a broad phase that groups nearby objects before any precise collision math runs. The goal is not to make every collision test faster. It is to avoid asking for tests that cannot possibly matter.
 
 ## What is a shmup?
 
@@ -41,7 +36,7 @@ Collision detection has two stages: the broad phase finds candidate pairs, and t
 
 ## What the broad phase should do
 
-> Fewer collision tests — not faster ones.
+**Fewer collision tests — not faster ones.**
 
 The broad phase is a filter: its only job is to throw away pairs that can’t possibly collide.
 
@@ -53,9 +48,34 @@ A uniform grid of fixed-size sectors suits a shmup well. Objects are only consid
 
 The level owns the sector grid and rebuilds it every frame: clear the sectors, update each object, let it register itself, and the grid reflects where everything is now.
 
+```cpp
+void Level::Update(float dt)
+{
+    m_sectorGrid.Clear();
+
+    for (GameObject* object : m_objects)
+    {
+        object->Update(dt);
+        m_sectorGrid.Add(object);
+    }
+}
+```
+
+The order matters. Add an object after updating its position, otherwise it can be stored in the sector it occupied during the previous frame.
+
 ## Building the grid
 
 The grid is set up once, with sector dimensions derived from the screen size, then cleared and refilled each frame.
+
+```cpp
+constexpr int SectorSize = 64;
+
+m_cols = (screenWidth + SectorSize - 1) / SectorSize;
+m_rows = (screenHeight + SectorSize - 1) / SectorSize;
+m_sectors.resize(m_cols * m_rows);
+```
+
+The extra `SectorSize - 1` rounds up. A screen that is not an exact multiple of the sector size still gets a final sector covering its right or bottom edge.
 
 ## Assigning objects to sectors
 

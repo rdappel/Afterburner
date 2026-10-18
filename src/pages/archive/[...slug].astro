@@ -1,6 +1,7 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import ShaderDemo from '../../components/ShaderDemo.astro';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog', ({ data }) => !data.draft);
@@ -15,8 +16,17 @@ const fmtDate = (x: Date) => x.toLocaleDateString('en-US', { month: 'long', day:
 
 // "Next in series" (or the next newest post)
 const series = d.series ? all.filter((p) => p.data.series === d.series).sort((a, b) => (a.data.part ?? 0) - (b.data.part ?? 0)) : [];
+const previous = series.length ? series.find((p) => (p.data.part ?? 0) === (d.part ?? 0) - 1) : undefined;
 const next = series.length ? series.find((p) => (p.data.part ?? 0) === (d.part ?? 0) + 1) : undefined;
 const titleParts = d.title.split(':');
+const shaderEffectsByPost = {
+  'pixel-shaders-part-1': ['flash'],
+  'pixel-shaders-part-2': ['pulse'],
+  'pixel-shaders-part-3': ['outline'],
+  'pixel-shaders-part-4': ['dissolve'],
+  'pixel-shaders-part-5': ['light', 'water'],
+} as const;
+const shaderEffects = shaderEffectsByPost[post.id as keyof typeof shaderEffectsByPost] ?? [];
 ---
 <Base title={`${d.title} — Ryan Appel`} description={d.summary} current="writing">
   <article>
@@ -74,15 +84,34 @@ const titleParts = d.title.split(':');
           </nav>
         ) : <div></div>}
         <div class="prose">
-          <Content />
-          {next && (
-            <a class="next" href={`/archive/${next.id}/`}>
-              <span style="display:flex;flex-direction:column;gap:10px">
-                <span class="mono" style="color:var(--muted)">Next in series · Part {next.data.part}</span>
-                <span class="x" style="font-size:38px">{next.data.title.split(':').pop()?.trim()}</span>
-              </span>
-              <span style="width:64px;height:64px;flex:none;border-radius:50%;background:var(--lime);color:var(--ink);display:grid;place-items:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+          {previous && (
+            <a class="series-back mono" href={`/archive/${previous.id}/`}>
+              ← Part {d.part} of {d.series} · Back to Part {previous.data.part}: {previous.data.title.split(':').pop()?.trim()}
             </a>
+          )}
+          <Content />
+          {shaderEffects.map((effect) => <ShaderDemo effect={effect} />)}
+          {(previous || next) && (
+            <nav class="series-nav" aria-label="Series navigation">
+              {previous && (
+                <a class="next previous" href={`/archive/${previous.id}/`}>
+                  <span style="width:52px;height:52px;flex:none;border-radius:50%;background:var(--ice);color:var(--ink);display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"></path></svg></span>
+                  <span style="display:flex;flex-direction:column;gap:8px;min-width:0">
+                    <span class="mono" style="color:var(--muted)">Previous · Part {previous.data.part}</span>
+                    <span class="x" style="font-size:clamp(24px,2.5vw,32px);overflow-wrap:anywhere">{previous.data.title.split(':').pop()?.trim()}</span>
+                  </span>
+                </a>
+              )}
+              {next && (
+                <a class="next" href={`/archive/${next.id}/`}>
+                  <span style="display:flex;flex-direction:column;gap:8px;min-width:0">
+                    <span class="mono" style="color:var(--muted)">Next · Part {next.data.part}</span>
+                    <span class="x" style="font-size:clamp(24px,2.5vw,32px);overflow-wrap:anywhere">{next.data.title.split(':').pop()?.trim()}</span>
+                  </span>
+                  <span style="width:52px;height:52px;flex:none;border-radius:50%;background:var(--lime);color:var(--ink);display:grid;place-items:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+                </a>
+              )}
+            </nav>
           )}
         </div>
       </div>
@@ -90,6 +119,11 @@ const titleParts = d.title.split(':');
   </article>
 
   <script>
+    document.querySelectorAll<HTMLElement>('[data-shader-demo-slot]').forEach((slot) => {
+      const demo = document.querySelector<HTMLElement>(`[data-shader-demo="${slot.dataset.shaderDemoSlot}"]`);
+      if (demo) slot.replaceWith(demo);
+    });
+
     // Highlight the section you're reading in the table of contents
     const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-toc]'));
     const heads = links.map((a) => document.getElementById(a.dataset.toc!)).filter(Boolean) as HTMLElement[];

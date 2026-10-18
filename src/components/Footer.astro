@@ -1,4 +1,8 @@
 ---
+interface Props { current?: 'home' | 'writing' }
+const { current = 'home' } = Astro.props;
+const home = current === 'home' ? '' : '/';
+
 const first = ['R', 'y', 'a', 'n'];
 const last = ['A', 'p', 'p', 'e', 'l'];
 const colors = ['var(--lime)', 'var(--ice)'];
@@ -13,7 +17,7 @@ const colors = ['var(--lime)', 'var(--ice)'];
     </div>
     <div class="mono" style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;color:var(--muted);padding-top:20px;border-top:1px solid var(--line)">
       <span>© {new Date().getFullYear()} Ryan Appel</span>
-      <a href="#top" style="text-decoration:none;color:var(--fg)">Back to top ↑</a>
+      <a href={`${home}#top`} style="text-decoration:none;color:var(--fg)">Back to top ↑</a>
     </div>
   </div>
 </footer>

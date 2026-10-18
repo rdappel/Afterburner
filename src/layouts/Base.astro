@@ -40,7 +40,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
       <main id="main">
         <slot />
       </main>
-      <Footer />
+      <Footer current={current} />
     </div>
     <script>
       // Custom cursor (pointer devices only)
@@ -52,6 +52,31 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         }, { passive: true });
         document.addEventListener('pointerleave', () => cursor.classList.remove('on'));
       }
+
+      const header = document.querySelector<HTMLElement>('.topbar');
+      const scrollToHash = (hash: string) => {
+        const target = document.getElementById(hash.slice(1));
+        if (!target || !header) return;
+
+        const offset = header.getBoundingClientRect().height + 16;
+        const top = Math.max(0, window.scrollY + target.getBoundingClientRect().top - offset);
+        const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+        window.scrollTo({ top, behavior });
+      };
+
+      document.addEventListener('click', (event) => {
+        const link = (event.target as Element).closest<HTMLAnchorElement>('a[href]');
+        if (!link) return;
+
+        const url = new URL(link.href, window.location.href);
+        if (url.origin !== window.location.origin || url.pathname !== window.location.pathname || !url.hash) return;
+
+        event.preventDefault();
+        history.pushState(null, '', url.hash);
+        scrollToHash(url.hash);
+      });
+
+      if (window.location.hash) requestAnimationFrame(() => scrollToHash(window.location.hash));
     </script>
   </body>
 </html>

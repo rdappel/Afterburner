@@ -9,9 +9,11 @@ npm install          # install dependencies for local development
 npm run dev          # Astro dev server at http://localhost:4321
 npm run build        # production static-site build to dist/
 npm run preview      # serve the already-built dist/ output
+npm run test:e2e     # Playwright browser checks, including internal navigation
+npm run test:e2e -- tests/navigation.spec.ts  # run the navigation suite alone
 ```
 
-This repository has no configured test runner, test files, linter, or single-test command. Use `npm run build` as the available project validation command.
+There is no linter. Run `npm run build` after content or rendering changes; run the Playwright navigation suite after changes to links, section IDs, header behavior, or scrolling.
 
 ## Architecture
 
@@ -19,7 +21,7 @@ This repository has no configured test runner, test files, linter, or single-tes
 - `src/pages/index.astro` is the composed one-page portfolio. Its editable project, course, and stack content comes from `src/data/site.ts`; keep presentation logic in the page and content records in that data module.
 - `src/scripts/home.ts` implements all home-page interactivity, including project filters/showcase, collision lab, course rail, stack tabs, and contact form. It is progressive enhancement: the HTML/CSS layout must remain usable without JavaScript.
 - `src/styles/global.css` owns the shared design tokens and component/route styles. Much of the page geometry is intentionally kept as inline Astro `style` attributes, while reusable class styling and responsive behavior belong in this stylesheet.
-- Blog posts are Markdown/MDX files in `src/content/blog/`. `src/content.config.ts` validates their front matter and derives each route from the filename. `src/pages/archive/index.astro` builds the filtered/sorted index; `src/pages/archive/[...slug].astro` statically renders post pages, a depth-2 heading TOC, optional diagrams, and series navigation.
+- Blog posts are Markdown/MDX files in `src/content/blog/`. `src/content.config.ts` validates their front matter and derives each route from the filename. `src/pages/archive/index.astro` builds the filtered/sorted index; `src/pages/archive/[...slug].astro` statically renders post pages, a depth-2 heading TOC, optional diagrams, and previous/next series navigation.
 
 ## Repository Conventions
 
@@ -31,4 +33,3 @@ This repository has no configured test runner, test files, linter, or single-tes
 - Use `src/data/site.ts` for portfolio copy, project screenshots, course lists, and stack categories. Project image paths are root-relative references to files under `public/`; set image `fit` to `cover` for desktop captures and `contain` for tall/handheld captures.
 - Reuse the CSS custom properties defined on `.site` (`--lime`, `--blue`, `--ice`, `--ink`, etc.) and established utility classes such as `.x`, `.mono`, and `.wrap` instead of introducing one-off visual tokens.
 - The contact form endpoint is intentionally supplied at build time through `PUBLIC_CONTACT_ENDPOINT`. Do not hard-code a form service URL; with no endpoint, the client displays its not-connected status.
-

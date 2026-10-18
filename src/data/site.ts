@@ -15,7 +15,7 @@ export interface Project {
   color: string; // CSS color / var
   art: string; // placeholder pattern class (art-a … art-g) used when there is no image
   addressBar: string; // text shown in the fake browser bar
-  image?: { src: string; alt: string; fit: 'cover' | 'contain' };
+  image?: { src: string; alt: string; fit: 'cover' | 'contain' | 'contain-large' };
 }
 
 const LIME = 'var(--lime)';
@@ -27,16 +27,24 @@ export const projects: Project[] = [
     cat: 'apps', catLabel: 'App',
     tech: 'Node · Express', status: 'Deployed', year: '2022',
     description: 'A home automation and control center bringing smart devices, media and environmental controls into one interface.',
-    href: 'https://github.com/rdappel/home-hub',
+    href: 'https://github.com/orgs/appel-home-hub/packages',
     color: LIME, art: 'art-a', addressBar: 'home-hub',
+    image: {
+      src: '/images/work/home-hub.png', fit: 'cover',
+      alt: 'Home Hub dashboard showing the time, weather, garage doors, lighting controls, and back-door lock status',
+    },
   },
   {
     name: 'Grade Assist',
     cat: 'apps', catLabel: 'App',
-    tech: 'Node.js', status: 'Live', year: '[Year]',
-    description: '[One-line description of Grade Assist]',
+    tech: 'Node.js', status: 'Live', year: '2025',
+    description: 'A local Node.js tool that reduces grading time in Blackboard Ultra. It authenticates via Blackboard OAuth2, discovers submissions that need grading, runs configured grading scripts, and presents results in a local dashboard where you can review and apply grades back to Blackboard.',
     href: '#work',
     color: ICE, art: 'art-b', addressBar: 'grade-assist',
+    image: {
+      src: '/images/work/grade-assist.png', fit: 'contain',
+      alt: 'Grade Assist grading dashboard showing assignment submissions, code review tabs, scoring controls, and feedback fields',
+    },
   },
   {
     name: 'ryan-appel.com',
@@ -45,6 +53,10 @@ export const projects: Project[] = [
     description: 'This site — a single-page portfolio with a long-form blog.',
     href: '/',
     color: ICE, art: 'art-c', addressBar: 'ryan-appel.com',
+    image: {
+      src: '/images/work/ryan-appel.png', fit: 'cover',
+      alt: 'Ryan Appel portfolio website showing the hero heading and selected-work section',
+    },
   },
   {
     name: 'FVTC Software',
@@ -78,7 +90,7 @@ export const projects: Project[] = [
     href: 'https://www.nintendolife.com/games/3ds-eshop/cube_creator_3d', cta: 'See more',
     color: ICE, art: 'art-f', addressBar: '▶ Nintendo 3DS',
     image: {
-      src: '/images/work/cube-creator-3d.jpg', fit: 'contain',
+      src: '/images/work/cube-creator-3d.jpg', fit: 'contain-large',
       alt: 'Cube Creator 3D on Nintendo 3DS: a blocky mountain landscape on the top screen and a grid of building blocks to choose from on the touch screen',
     },
   },
@@ -90,7 +102,7 @@ export const projects: Project[] = [
     href: 'https://www.nintendolife.com/games/3ds-eshop/strike_force_foxx', cta: 'See more',
     color: ICE, art: 'art-g', addressBar: '▶ Nintendo 3DS',
     image: {
-      src: '/images/work/strike-force-foxx.webp', fit: 'contain',
+      src: '/images/work/strike-force-foxx.webp', fit: 'contain-large',
       alt: "Strike Force Foxx on Nintendo 3DS: Captain Foxx's helicopter fires on an anti-aircraft gun over a tropical island, with armor, fuel and rescue counters on the touch screen",
     },
   },

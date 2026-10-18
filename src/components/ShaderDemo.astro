@@ -1,0 +1,185 @@
+---
+interface Props {
+  effect: 'flash' | 'pulse' | 'outline' | 'dissolve' | 'light' | 'water';
+}
+
+const { effect } = Astro.props;
+const details = {
+  flash: { title: 'Try it: damage flash', instruction: 'Move the slider to blend the image toward the flash color.', control: 'Mix amount' },
+  pulse: { title: 'Try it: animated pulse', instruction: 'Set the pulse speed, then pause the shader to inspect a frame.', control: 'Pulse speed' },
+  outline: { title: 'Try it: sprite outline', instruction: 'Increase the radius to inspect the transparent pixels around the sprite.', control: 'Outline width' },
+  dissolve: { title: 'Try it: noise dissolve', instruction: 'Raise the threshold to reveal how a noise value decides which pixels survive.', control: 'Dissolve amount' },
+  light: { title: 'Try it: 2D light', instruction: 'Drag across the sprite to move the light, then adjust its radius.', control: 'Light radius' },
+  water: { title: 'Try it: water distortion', instruction: 'Adjust the wave strength to shift where each output pixel samples the image.', control: 'Wave strength' },
+}[effect];
+---
+
+<figure class="shader-demo" data-shader-demo={effect}>
+  <figcaption>
+    <span class="mono" style="color:var(--lime)">Interactive shader lab</span>
+    <h2>{details.title}</h2>
+    <p>{details.instruction}</p>
+  </figcaption>
+  <canvas width="480" height="300" role="img" aria-label={`${details.title} applied to an image`}></canvas>
+  <div class="shader-demo-controls">
+    <label>
+      <span>{details.control}</span>
+      <output>0%</output>
+      <input type="range" min="0" max="100" value={effect === 'pulse' ? '35' : effect === 'outline' ? '34' : effect === 'light' ? '55' : effect === 'water' ? '25' : '0'} />
+    </label>
+    {effect === 'flash' || effect === 'pulse' || effect === 'outline' || effect === 'dissolve' ? (
+      <label class="shader-demo-color">
+        <span>Effect color</span>
+        <input type="color" value={effect === 'outline' ? '#e6bc66' : effect === 'dissolve' ? '#ffb347' : '#ff4949'} />
+      </label>
+    ) : null}
+    {effect === 'pulse' || effect === 'water' ? <button type="button">Pause animation</button> : null}
+  </div>
+</figure>
+
+<style>
+  .shader-demo{margin:44px 0;padding:24px;border:1px solid var(--line);border-radius:24px;background:var(--panel)}
+  .shader-demo figcaption{margin-bottom:20px}
+  .shader-demo h2{margin:8px 0;font-size:clamp(28px,4vw,42px)}
+  .shader-demo p{margin:0;color:var(--muted);font-size:15px;line-height:1.5}
+  .shader-demo canvas{display:block;width:100%;max-width:480px;aspect-ratio:8/5;margin:0 auto;border-radius:16px;background:#0b0b0c;image-rendering:pixelated;touch-action:none}
+  .shader-demo-controls{display:flex;flex-wrap:wrap;align-items:end;gap:18px;margin-top:20px}
+  .shader-demo-controls label{display:flex;flex:1 1 220px;flex-wrap:wrap;gap:8px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+  .shader-demo-controls label > span{flex:1}
+  .shader-demo-controls output{color:var(--lime)}
+  .shader-demo-controls input[type=range]{width:100%;accent-color:var(--lime)}
+  .shader-demo-controls .shader-demo-color{flex:0 1 132px;align-items:center}
+  .shader-demo-controls input[type=color]{width:42px;height:32px;padding:0;border:0;background:none}
+  .shader-demo-controls button{min-height:38px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--fg);font:700 12px 'JetBrains Mono',monospace;letter-spacing:.04em;text-transform:uppercase;cursor:pointer}
+</style>
+
+<script>
+  const clamp = (value: number) => Math.max(0, Math.min(255, value));
+  const hexRgb = (hex: string) => [1, 3, 5].map((index) => Number.parseInt(hex.slice(index, index + 2), 16));
+
+  document.querySelectorAll<HTMLElement>('[data-shader-demo]').forEach((demo) => {
+    const effect = demo.dataset.shaderDemo as 'flash' | 'pulse' | 'outline' | 'dissolve' | 'light' | 'water';
+    const canvas = demo.querySelector('canvas')!;
+    const context = canvas.getContext('2d', { willReadFrequently: true })!;
+    const range = demo.querySelector<HTMLInputElement>('input[type="range"]')!;
+    const colorInput = demo.querySelector<HTMLInputElement>('input[type="color"]');
+    const output = demo.querySelector<HTMLOutputElement>('output')!;
+    const button = demo.querySelector<HTMLButtonElement>('button');
+    const image = new Image();
+    let source: ImageData | undefined;
+    let color = colorInput ? hexRgb(colorInput.value) : [255, 241, 199];
+    let paused = false;
+    let started = performance.now();
+    let light = { x: canvas.width / 2, y: canvas.height / 2 };
+
+    const drawSource = () => {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.imageSmoothingEnabled = false;
+      const scale = Math.min(260 / image.naturalWidth, 220 / image.naturalHeight);
+      const width = Math.round(image.naturalWidth * scale);
+      const height = Math.round(image.naturalHeight * scale);
+      context.drawImage(image, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
+      source = context.getImageData(0, 0, canvas.width, canvas.height);
+    };
+
+    const draw = (now = performance.now()) => {
+      if (!source) return;
+      const pixels = new ImageData(new Uint8ClampedArray(source.data), canvas.width, canvas.height);
+      const amount = Number(range.value) / 100;
+      const time = (now - started) / 1000;
+      const activeAmount = effect === 'pulse' ? (0.5 + 0.5 * Math.sin(time * (0.5 + amount * 3.5) * Math.PI * 2)) * 0.85 : amount;
+
+      if (effect === 'water') {
+        const strength = amount * 18;
+        for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) {
+          const sourceX = Math.round(Math.max(0, Math.min(canvas.width - 1, x + Math.sin(y * 0.12 + time * 2) * strength)));
+          const sourceY = Math.round(Math.max(0, Math.min(canvas.height - 1, y + Math.cos(x * 0.1 + time * 1.6) * strength)));
+          const targetIndex = (y * canvas.width + x) * 4;
+          const sourceIndex = (sourceY * canvas.width + sourceX) * 4;
+          pixels.data[targetIndex] = source.data[sourceIndex];
+          pixels.data[targetIndex + 1] = source.data[sourceIndex + 1];
+          pixels.data[targetIndex + 2] = source.data[sourceIndex + 2];
+          pixels.data[targetIndex + 3] = source.data[sourceIndex + 3];
+        }
+        context.putImageData(pixels, 0, 0);
+        return;
+      }
+
+      for (let index = 0; index < pixels.data.length; index += 4) {
+        const alpha = source.data[index + 3];
+        if (!alpha) continue;
+        if (effect === 'flash' || effect === 'pulse') {
+          pixels.data[index] = clamp(source.data[index] * (1 - activeAmount) + color[0] * activeAmount);
+          pixels.data[index + 1] = clamp(source.data[index + 1] * (1 - activeAmount) + color[1] * activeAmount);
+          pixels.data[index + 2] = clamp(source.data[index + 2] * (1 - activeAmount) + color[2] * activeAmount);
+        } else if (effect === 'dissolve') {
+          const noise = (Math.sin(index * 12.9898) * 43758.5453) % 1;
+          const value = Math.abs(noise);
+          if (value < amount) pixels.data[index + 3] = 0;
+          else if (value < amount + 0.13) {
+            const edge = 1 - (value - amount) / 0.13;
+            pixels.data[index] = clamp(source.data[index] * (1 - edge) + color[0] * edge);
+            pixels.data[index + 1] = clamp(source.data[index + 1] * (1 - edge) + color[1] * edge);
+            pixels.data[index + 2] = clamp(source.data[index + 2] * (1 - edge) + color[2] * edge);
+          }
+        } else if (effect === 'light') {
+          const pixel = index / 4;
+          const x = pixel % canvas.width;
+          const y = Math.floor(pixel / canvas.width);
+          const radius = 40 + amount * 230;
+          const distance = Math.hypot(x - light.x, y - light.y);
+          const brightness = 0.18 + 0.82 * Math.max(0, 1 - distance / radius);
+          pixels.data[index] = clamp(source.data[index] * brightness);
+          pixels.data[index + 1] = clamp(source.data[index + 1] * brightness);
+          pixels.data[index + 2] = clamp(source.data[index + 2] * brightness);
+        }
+      }
+
+      if (effect === 'outline') {
+        const radius = 1 + Math.round(amount * 3);
+        for (let y = radius; y < canvas.height - radius; y++) for (let x = radius; x < canvas.width - radius; x++) {
+          const index = (y * canvas.width + x) * 4;
+          if (source.data[index + 3] >= 128) continue;
+          let nearby = false;
+          for (let oy = -radius; oy <= radius && !nearby; oy++) for (let ox = -radius; ox <= radius; ox++) {
+            if (ox * ox + oy * oy <= radius * radius && source.data[((y + oy) * canvas.width + x + ox) * 4 + 3] >= 128) nearby = true;
+          }
+          if (nearby) pixels.data.set([...color, 255], index);
+        }
+      }
+
+      context.putImageData(pixels, 0, 0);
+    };
+
+    const animate = (now: number) => {
+      draw(now);
+      if (!paused && (effect === 'pulse' || effect === 'water')) requestAnimationFrame(animate);
+    };
+
+    const update = () => {
+      const value = Number(range.value);
+      output.value = effect === 'outline' ? `${1 + Math.round(value / 100 * 3)} px` : effect === 'pulse' ? `${(0.5 + value / 100 * 3.5).toFixed(1)} Hz` : effect === 'water' ? `${(value / 100 * 0.06).toFixed(3)}` : `${value}%`;
+      draw();
+    };
+
+    image.addEventListener('load', () => {
+      drawSource();
+      update();
+      if (effect === 'pulse' || effect === 'water') requestAnimationFrame(animate);
+    });
+    image.src = '/images/ryan-sprite.png';
+    range.addEventListener('input', update);
+    colorInput?.addEventListener('input', () => { color = hexRgb(colorInput.value); draw(); });
+    button?.addEventListener('click', () => {
+      paused = !paused;
+      button.textContent = paused ? 'Resume animation' : 'Pause animation';
+      if (!paused) { started = performance.now(); requestAnimationFrame(animate); }
+    });
+    canvas.addEventListener('pointermove', (event) => {
+      if (effect !== 'light' || !source) return;
+      const rect = canvas.getBoundingClientRect();
+      light = { x: (event.clientX - rect.left) * canvas.width / rect.width, y: (event.clientY - rect.top) * canvas.height / rect.height };
+      draw();
+    });
+  });
+</script>
